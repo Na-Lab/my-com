@@ -1,0 +1,58 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "/usr/include/c++/5",
+                "/usr/include/x86_64-linux-gnu/c++/5",
+                "/usr/local/include",
+                "/usr/lib/clang/3.8.0/include",
+                "/usr/include",
+                "/usr/include/x86_64-linux-gnu",
+                "${workspaceRoot}",
+                "/home/ibuki/arduino-1.8.5/hardware/arduino/avr/cores/arduino",
+                "/home/ibuki/arduino-1.8.5/hardware/arduino/avr/variants/standard",
+                "/home/ibuki/arduino-1.8.5/hardware/arduino/avr/libraries/EEPROM",
+                "/home/ibuki/arduino-1.8.5/hardware/arduino/avr/libraries/SPI",
+                "/home/ibuki/arduino-1.8.5/hardware/arduino/avr/libraries/SoftwareSerial",
+                "/home/ibuki/arduino-1.8.5/hardware/arduino/avr/libraries/Wire",
+                "/home/ibuki/arduino-1.8.5/hardware/tools/avr/avr/include",
+                "/home/ibuki/arduino-1.8.5/hardware/tools/avr/avr/include/avr",
+                "/home/ibuki/arduino-1.8.5/hardware/tools/avr/avr/include/compat",
+                "/home/ibuki/arduino-1.8.5/hardware/tools/avr/avr/include/util",
+                "/home/ibuki/arduino-1.8.5/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
+                "/home/ibuki/arduino-1.8.5/hardware/tools/avr/lib/gcc/avr/4.9.2/include-fixed",
+                "/home/ibuki/arduino-1.8.5/libraries/Servo/src",
+                "/home/ibuki/arduino-1.8.5/hardware/arduino/avr/libraries/SoftwareSerial/src"
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": false,
+                "path": [
+                    "/usr/include/c++/5",
+                    "/usr/include/x86_64-linux-gnu/c++/5",
+                    "/usr/local/include",
+                    "/usr/lib/clang/3.8.0/include",
+                    "/usr/include",
+                    "/usr/include/x86_64-linux-gnu",
+                    "${workspaceRoot}",
+                    "/home/ibuki/arduino-1.8.5/hardware/arduino/avr/cores/arduino",
+                    "/home/ibuki/arduino-1.8.5/hardware/arduino/avr/variants/standard",
+                    "/home/ibuki/arduino-1.8.5/hardware/arduino/avr/libraries/EEPROM",
+                    "/home/ibuki/arduino-1.8.5/hardware/arduino/avr/libraries/SPI",
+                    "/home/ibuki/arduino-1.8.5/hardware/arduino/avr/libraries/SoftwareSerial",
+                    "/home/ibuki/arduino-1.8.5/hardware/arduino/avr/libraries/Wire",
+                    "/home/ibuki/arduino-1.8.5/hardware/tools/avr/avr/include",
+                    "/home/ibuki/arduino-1.8.5/hardware/tools/avr/avr/include/avr",
+                    "/home/ibuki/arduino-1.8.5/hardware/tools/avr/avr/include/compat",
+                    "/home/ibuki/arduino-1.8.5/hardware/tools/avr/avr/include/util",
+                    "/home/ibuki/arduino-1.8.5/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
+                    "/home/ibuki/arduino-1.8.5/hardware/tools/avr/lib/gcc/avr/4.9.2/include-fixed",
+                    "/home/ibuki/arduino-1.8.5/libraries/Servo/src",
+                    "/home/ibuki/arduino-1.8.5/hardware/arduino/avr/libraries/SoftwareSerial/src"
+                ]
+            },
+            "intelliSenseMode": "clang-x64"
+        }
+    ],
+    "version": 3
+}
