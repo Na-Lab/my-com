@@ -89,7 +89,7 @@ void NineAxis::readMagneticFluxDensity() {
   struct magneticFluxDensity avgMagnetic = {0.0};
   int                        top, bottom;
 
-  for (int i = 0; i < 200; i++) {
+  for (int i = 0; i < 10; i++) {
     bottom = readRegisterData(MPU9250CompassAddress, 0x03);
     top    = readRegisterData(MPU9250CompassAddress, 0x04);
     avgMagnetic.x += ((top << 8) | bottom) * unitConversion + offsetX;
@@ -106,9 +106,9 @@ void NineAxis::readMagneticFluxDensity() {
     readRegisterData(MPU9250CompassAddress, 0x09);
   }
 
-  rawMagneticFluxDensity.x = avgMagnetic.x / 200.0;
-  rawMagneticFluxDensity.y = avgMagnetic.y / 200.0;
-  rawMagneticFluxDensity.z = avgMagnetic.z / 200.0;
+  rawMagneticFluxDensity.x = avgMagnetic.x / 10.0;
+  rawMagneticFluxDensity.y = avgMagnetic.y / 10.0;
+  rawMagneticFluxDensity.z = avgMagnetic.z / 10.0;
 }
 
 double NineAxis::getAzimuth() {

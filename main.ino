@@ -18,6 +18,8 @@ double getTargetAngle(double targetLatitude, double targetLongitude) {
   double dx    = x2 - x1;
   double r     = 6378.137;
   double angle = atan2(sin(dx), cos(y1) * tan(y2) - sin(y1) * cos(dx)) *180.0 / PI;
+
+  if (angle < 0) return (angle + 360.0);
   return angle;
 }
 void setup() {
@@ -28,17 +30,20 @@ void setup() {
 }
 
 void loop() {
-  double targetLatitude  = 43.056103;
-  double targetLongitude = 141.352636;
+  double targetLatitude  = 26.212561;
+  double targetLongitude = 127.689168;
   gps.update();
   sensor.update();
+
+  double destination =
+      getTargetAngle(targetLatitude, targetLongitude) + sensor.getAzimuth();
   Serial.print("target angle: ");
   Serial.print(getTargetAngle(targetLatitude, targetLongitude));
   Serial.println("");
   Serial.print("Azimuth: ");
   Serial.print(sensor.getAzimuth());
   Serial.println("");
-  motor.turn(sensor.getAzimuth());
+  motor.turn(destination);
   Serial.print("Latitude : ");
   Serial.println(gps.getLatitude());
   Serial.print("Longnitude : ");
