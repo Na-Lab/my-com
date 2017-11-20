@@ -10,29 +10,14 @@ GPS        gps(9600);
 
 // 現在地目的地間の角度算出関数
 double getTargetAngle(double targetLatitude, double targetLongitude) {
-  double x     = targetLongitude - gps.getLongitude();
-  double y     = targetLatitude - gps.getLatitude();
-  double angle = atan(y / x) * 180.0 / PI;
-
-  // arctan結果の第1象限以外の処理
-  if ((x > 0.0) && (y < 0.0)) {
-    angle += 180.0;  // 第2象限
-  } else if ((x < 0.0) && (y < 0.0)) {
-    angle += 180.0;  // 第3象限
-  } else if ((x < 0.0) && (y > 0.0)) {
-    angle += 360.0;  // 第4象限
-  }
-
-  // 軸に接する場合の処理
-  if ((fabs(x) < 0.01) && (y > 0.0)) {
-    angle = 0.0;
-  } else if ((fabs(x) < 0.01) && (y < 0.0)) {
-    angle = 180.0;
-  } else if ((x > 0.0) && (fabs(y) < 0.01)) {
-    angle = 90.0;
-  } else if ((x < 0.0) && (fabs(y) < 0.01)) {
-    angle = 270.0;
-  }
+  double x1, x2, y1, y2;
+  x1           = gps.getLongitude() * PI / 180;
+  x2           = targetLongitude * PI / 180;
+  y1           = gps.getLatitude() * PI / 180;
+  y2           = targetLatitude * PI / 180;
+  double dx    = x2 - x1;
+  double r     = 6378.137;
+  double angle = atan2(sin(dx), cos(y1) * tan(y2) - sin(y1) * cos(dx)) *180.0 / PI;
   return angle;
 }
 void setup() {
@@ -43,8 +28,8 @@ void setup() {
 }
 
 void loop() {
-  double targetLatitude  = 26.210533;
-  double targetLongitude = 127.681;
+  double targetLatitude  = 43.056103;
+  double targetLongitude = 141.352636;
   gps.update();
   sensor.update();
   Serial.print("target angle: ");
@@ -54,5 +39,9 @@ void loop() {
   Serial.print(sensor.getAzimuth());
   Serial.println("");
   motor.turn(sensor.getAzimuth());
+  Serial.print("Latitude : ");
+  Serial.println(gps.getLatitude());
+  Serial.print("Longnitude : ");
+  Serial.println(gps.getLongitude()); 
   // motor.turn(0);
 }

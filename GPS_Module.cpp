@@ -8,7 +8,7 @@ void GPS::update() {
   String nmeaData;
   do {
     nmeaData = Serial1.readStringUntil('\n');
-  } while (nmeaData.indexOf("$GPGGA") == -1);
+  } while (strncmp("$GPGGA", nmeaData.c_str(), 6));
 
   // トークンの抽出
   const char nmeaDelimitter = ',';
