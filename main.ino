@@ -31,14 +31,14 @@ void setup() {
 }
 
 void loop() {
-  double targetLatitude  = 35.377714;
-  double targetLongitude = 139.197772;
+  double targetLatitude  = 35.373014;
+  double targetLongitude = 139.271313;
   gps.update();
   sensor.update();
 
   double destination =
   getTargetAngle(targetLatitude, targetLongitude) + sensor.getAzimuth();
-  destination= destination -20;
+  destination += 180;
   if(destination >= 360){
     destination = destination - 360;
   }

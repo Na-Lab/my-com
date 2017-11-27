@@ -84,8 +84,8 @@ void NineAxis::readAngularAcceleration() {
 // 注意：これのみリトルエンディアンである
 void NineAxis::readMagneticFluxDensity() {
   const double               unitConversion = 0.15; /**< 単位換算 */
-  const double               offsetX     = -15.0; /**< X軸オフセット */
-  const double               offsetY     = -10.0; /**< Y軸オフセット */
+  const double               offsetX     = -7.50; /**< X軸オフセット */
+  const double               offsetY     = -7.50; /**< Y軸オフセット */
   struct magneticFluxDensity avgMagnetic = {0.0};
   int                        top, bottom;
 
