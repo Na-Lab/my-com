@@ -26,7 +26,6 @@ double getTargetAngle(double targetLatitude, double targetLongitude) {
 void setup() {
   motor.begin();
   sensor.begin();
-  Serial.begin(9600);
   delay(1000);
 }
 
@@ -42,19 +41,5 @@ void loop() {
   if(destination >= 360){
     destination = destination - 360;
   }
-  Serial.print("destination:");
-  Serial.println(destination);
-  Serial.print("target angle: ");
-  Serial.print(getTargetAngle(targetLatitude, targetLongitude));
-  Serial.println("");
-  Serial.print("Azimuth: ");
-  Serial.print(sensor.getAzimuth());
-  Serial.println("");
-//  motor.turn(0);
   motor.turn(destination);
-  Serial.print("Latitude : ");
-  Serial.println(gps.getLatitude(), 6);
-  Serial.print("Longnitude : ");
-  Serial.println(gps.getLongitude(), 6); 
-  // motor.turn(0);
 }
