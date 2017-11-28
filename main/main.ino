@@ -50,11 +50,11 @@ void loop() {
   Serial.print("Azimuth: ");
   Serial.print(sensor.getAzimuth());
   Serial.println("");
-//  motor.turn(0);
-  motor.turn(destination);
+  motor.turn(360);
+//  motor.turn(destination);
   Serial.print("Latitude : ");
   Serial.println(gps.getLatitude(), 6);
   Serial.print("Longnitude : ");
   Serial.println(gps.getLongitude(), 6); 
-  // motor.turn(0);
+
 }
