@@ -83,10 +83,10 @@ void NineAxis::readAngularAcceleration() {
 
 // 注意：これのみリトルエンディアンである
 void NineAxis::readMagneticFluxDensity() {
-  const double               unitConversion = 0.15; /**< 単位換算 */
-  const double               offsetX     = -7.50; /**< X軸オフセット */
-  const double               offsetY     = -7.50; /**< Y軸オフセット */
-  struct magneticFluxDensity avgMagnetic = {0.0};
+  const double               unitConversion = 0.15;  /**< 単位換算 */
+  const double               offsetX        = -37.5; /**< X軸オフセット */
+  const double               offsetY        = -7.50; /**< Y軸オフセット */
+  struct magneticFluxDensity avgMagnetic    = {0.0};
   int                        top, bottom;
 
   for (int i = 0; i < 10; i++) {
@@ -114,7 +114,6 @@ void NineAxis::readMagneticFluxDensity() {
 double NineAxis::getAzimuth() {
   double per     = rawMagneticFluxDensity.x / rawMagneticFluxDensity.y;
   double azimuth = atan(per) * 180.0 / PI;
-
 
   // // 1,2,3,4それぞれで場合わけｘが０のときも
   // //座標軸　yが→　xが↑　で考えている．注意
