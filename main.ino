@@ -37,7 +37,6 @@ void loop() {
 
   double destination =
   getTargetAngle(targetLatitude, targetLongitude) + sensor.getAzimuth();
-  destination += 180;
   if(destination >= 360){
     destination = destination - 360;
   }

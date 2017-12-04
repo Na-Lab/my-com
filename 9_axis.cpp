@@ -5,39 +5,62 @@
 
 NineAxis::NineAxis() : MPU9250Address(0x68), MPU9250CompassAddress(0x0C) {
   // いい初期化の方法ないかな
-  rawAcceleration.x        = 0.0;
-  rawAcceleration.y        = 0.0;
-  rawAcceleration.z        = 0.0;
-  rawAngularAcceleration.x = 0.0;
-  rawAngularAcceleration.y = 0.0;
-  rawAngularAcceleration.z = 0.0;
-  rawMagneticFluxDensity.x = 0.0;
-  rawMagneticFluxDensity.y = 0.0;
-  rawMagneticFluxDensity.z = 0.0;
+  rawAccel.x = 0.0;
+  rawAccel.y = 0.0;
+  rawAccel.z = 0.0;
+  rawGyro.x  = 0.0;
+  rawGyro.y  = 0.0;
+  rawGyro.z  = 0.0;
+  rawMag.x   = 0.0;
+  rawMag.y   = 0.0;
+  rawMag.z   = 0.0;
 }
 
 void NineAxis::begin() {
+  const byte PWR_MGMT_1 = 0x6B;  // パワーマネジメントレジスタ1
+  const byte INT_PIN_CFG = 0x37;  // 割り込みピンコンフィギュレーションレジスタ
+
+  const byte AK8963_CNTL = 0x0A;  // コントロールレジスタ1
+  const byte AK8963_ASAX = 0x10;  // 感度調整レジスタ
+
   Wire.begin();
-  writeRegisterData(MPU9250Address, 0x6B, 0x00);
-  writeRegisterData(MPU9250Address, 0x37, 0x02);
-  writeRegisterData(MPU9250CompassAddress, 0x0A, 0x12);
+  writeByte(MPU9250Address, PWR_MGMT_1, 0x00);  // スリープモードをクリア
+  delay(10);
+  writeByte(MPU9250Address, INT_PIN_CFG, 0x02);  // バイパスモードをセット
+  delay(10);
+
+  writeByte(MPU9250CompassAddress, AK8963_CNTL,
+            0x00);  // 地磁気センサをリセット
+  delay(10);
+  writeByte(MPU9250CompassAddress, AK8963_CNTL,
+            0x0F);  // ROMアクセスモードに変更
+  delay(10);
+  byte tempData[3] = {0, 0, 0};
+  readBytes(MPU9250CompassAddress, AK8963_ASAX, 3, tempData);
+  magCalibration[0] = (double)(tempData[0] - 128) / 256. + 1.;
+  magCalibration[1] = (double)(tempData[1] - 128) / 256. + 1.;
+  magCalibration[2] = (double)(tempData[2] - 128) / 256. + 1.;
+  writeByte(MPU9250CompassAddress, AK8963_CNTL,
+            0x00);  // パワーダウンモードに戻す
+  delay(10);
+  writeByte(MPU9250CompassAddress, AK8963_CNTL, 0x12);  // 連続測定モード1に変更
+  delay(10);
 }
 
 void NineAxis::update() {
-  readAcceleration();
-  readAngularAcceleration();
-  readMagneticFluxDensity();
+  readAccelData();
+  readGyroData();
+  readMagData();
 }
 
-void NineAxis::writeRegisterData(byte slaveAddress, byte registerAddress,
-                                 byte data) {
+void NineAxis::writeByte(byte slaveAddress, byte registerAddress, byte data) {
   Wire.beginTransmission(slaveAddress);
   Wire.write(registerAddress);
   Wire.write(data);
   Wire.endTransmission();
 }
 
-byte NineAxis::readRegisterData(byte slaveAddress, byte registerAddress) {
+byte NineAxis::readByte(byte slaveAddress, byte registerAddress) {
   Wire.beginTransmission(slaveAddress);
   Wire.write(registerAddress);
   Wire.endTransmission(false);
@@ -47,125 +70,96 @@ byte NineAxis::readRegisterData(byte slaveAddress, byte registerAddress) {
   return (Wire.read());
 }
 
-void NineAxis::readAcceleration() {
-  const double unitConversion = 0.061;
-  int          top, bottom;
-
-  top               = readRegisterData(MPU9250Address, 0x3b);
-  bottom            = readRegisterData(MPU9250Address, 0x3c);
-  rawAcceleration.x = ((top << 8) | bottom) * unitConversion;
-
-  top               = readRegisterData(MPU9250Address, 0x3d);
-  bottom            = readRegisterData(MPU9250Address, 0x3e);
-  rawAcceleration.y = ((top << 8) | bottom) * unitConversion;
-
-  top               = readRegisterData(MPU9250Address, 0x3f);
-  bottom            = readRegisterData(MPU9250Address, 0x40);
-  rawAcceleration.z = ((top << 8) | bottom) * unitConversion;
-}
-
-void NineAxis::readAngularAcceleration() {
-  const double unitConversion = 0.00763;
-  int          top, bottom;
-
-  top                      = readRegisterData(MPU9250Address, 0x43);
-  bottom                   = readRegisterData(MPU9250Address, 0x44);
-  rawAngularAcceleration.x = ((top << 8) | bottom) * unitConversion;
-
-  top                      = readRegisterData(MPU9250Address, 0x45);
-  bottom                   = readRegisterData(MPU9250Address, 0x46);
-  rawAngularAcceleration.y = ((top << 8) | bottom) * unitConversion;
-
-  top                      = readRegisterData(MPU9250Address, 0x47);
-  bottom                   = readRegisterData(MPU9250Address, 0x48);
-  rawAngularAcceleration.z = ((top << 8) | bottom) * unitConversion;
-}
-
-// 注意：これのみリトルエンディアンである
-void NineAxis::readMagneticFluxDensity() {
-  const double               unitConversion = 0.15; /**< 単位換算 */
-  const double               offsetX     = -7.50; /**< X軸オフセット */
-  const double               offsetY     = -7.50; /**< Y軸オフセット */
-  struct magneticFluxDensity avgMagnetic = {0.0};
-  int                        top, bottom;
-
-  for (int i = 0; i < 10; i++) {
-    bottom = readRegisterData(MPU9250CompassAddress, 0x03);
-    top    = readRegisterData(MPU9250CompassAddress, 0x04);
-    avgMagnetic.x += ((top << 8) | bottom) * unitConversion + offsetX;
-
-    bottom = readRegisterData(MPU9250CompassAddress, 0x05);
-    top    = readRegisterData(MPU9250CompassAddress, 0x06);
-    avgMagnetic.y += ((top << 8) | bottom) * unitConversion + offsetY;
-
-    bottom = readRegisterData(MPU9250CompassAddress, 0x07);
-    top    = readRegisterData(MPU9250CompassAddress, 0x08);
-    avgMagnetic.z += ((top << 8) | bottom) * unitConversion;
-
-    // データをリフレッシュするには0x09を読む必要がある
-    readRegisterData(MPU9250CompassAddress, 0x09);
+void NineAxis::readBytes(byte slaveAddress, byte registerAddress, byte count,
+                         byte *data) {
+  Wire.beginTransmission(slaveAddress);
+  Wire.write(registerAddress);
+  Wire.endTransmission(false);
+  uint8_t i = 0;
+  Wire.requestFrom(slaveAddress, count);
+  while (Wire.available()) {
+    data[i] = Wire.read();
+    i++;
   }
+}
 
-  rawMagneticFluxDensity.x = avgMagnetic.x / 10.0;
-  rawMagneticFluxDensity.y = avgMagnetic.y / 10.0;
-  rawMagneticFluxDensity.z = avgMagnetic.z / 10.0;
+void NineAxis::readAccelData() {
+  const double unitConversion = 0.061;  /**< 単位換算値 */
+  byte         rawData[6]     = {0};    /**< 生データ */
+
+  readBytes(MPU9250Address, 0x3b, 6, rawData);
+  rawAccel.x = ((rawData[0] << 8) | rawData[1]) * unitConversion;
+  rawAccel.y = ((rawData[2] << 8) | rawData[3]) * unitConversion;
+  rawAccel.z = ((rawData[4] << 8) | rawData[5]) * unitConversion;
+}
+
+void NineAxis::readGyroData() {
+  const double unitConversion = 0.00763;        /**< 単位換算値 */
+  byte         rawData[6]     = {0};            /**< 生データ */
+
+  readBytes(MPU9250Address, 0x43, 6, rawData);
+  rawGyro.x = ((rawData[0] << 8) | rawData[1]) * unitConversion;
+  rawGyro.y = ((rawData[2] << 8) | rawData[3]) * unitConversion;
+  rawGyro.z = ((rawData[4] << 8) | rawData[5]) * unitConversion;
+}
+
+void NineAxis::readMagData() {
+  const double unitConversion = 0.15;    /**< 単位換算値 */
+  const double offsetX        = -57.588; /**< X軸オフセット */
+  const double offsetY        = -4.93; /**< Y軸オフセット */
+  const double offsetZ        = 0.0;     /**< Z軸オフセット */
+  byte         rawData[6]     = {0};     /**< 生データ */
+
+  readBytes(MPU9250CompassAddress, 0x03, 6, rawData);
+  // 注意：リトルエンディアン
+  rawMag.x =
+      ((rawData[1] << 8) | rawData[0]) * unitConversion * magCalibration[0] +
+      offsetX;
+  rawMag.y =
+      ((rawData[3] << 8) | rawData[2]) * unitConversion * magCalibration[1] +
+      offsetY;
+  rawMag.z =
+      ((rawData[5] << 8) | rawData[4]) * unitConversion * magCalibration[2] +
+      offsetZ;
+  readByte(MPU9250CompassAddress, 0x09);
 }
 
 double NineAxis::getAzimuth() {
-  double per     = rawMagneticFluxDensity.x / rawMagneticFluxDensity.y;
+  double per     = rawMag.x / rawMag.y;
   double azimuth = atan(per) * 180.0 / PI;
-
 
   // // 1,2,3,4それぞれで場合わけｘが０のときも
   // //座標軸　yが→　xが↑　で考えている．注意
 
   // arctan結果の第1象限以外の処理
-  if ((rawMagneticFluxDensity.x > 0.0) && (rawMagneticFluxDensity.y < 0.0)) {
+  if ((rawMag.x > 0.0) && (rawMag.y < 0.0)) {
     azimuth += 180.0;  // 第2象限
-  } else if ((rawMagneticFluxDensity.x < 0.0) &&
-             (rawMagneticFluxDensity.y < 0.0)) {
+  } else if ((rawMag.x < 0.0) && (rawMag.y < 0.0)) {
     azimuth += 180.0;  // 第3象限
-  } else if ((rawMagneticFluxDensity.x < 0.0) &&
-             (rawMagneticFluxDensity.y > 0.0)) {
+  } else if ((rawMag.x < 0.0) && (rawMag.y > 0.0)) {
     azimuth += 360.0;  // 第4象限
   }
 
   // 軸に接する場合の処理
-  if ((fabs(rawMagneticFluxDensity.x) < 0.01) &&
-      (rawMagneticFluxDensity.y > 0.0)) {
+  if ((fabs(rawMag.x) < 0.01) && (rawMag.y > 0.0)) {
     azimuth = 0.0;
-  } else if ((fabs(rawMagneticFluxDensity.x) < 0.01) &&
-             (rawMagneticFluxDensity.y < 0.0)) {
+  } else if ((fabs(rawMag.x) < 0.01) && (rawMag.y < 0.0)) {
     azimuth = 180.0;
-  } else if ((rawMagneticFluxDensity.x > 0.0) &&
-             (fabs(rawMagneticFluxDensity.y) < 0.01)) {
+  } else if ((rawMag.x > 0.0) && (fabs(rawMag.y) < 0.01)) {
     azimuth = 90.0;
-  } else if ((rawMagneticFluxDensity.x < 0.0) &&
-             (fabs(rawMagneticFluxDensity.y) < 0.01)) {
+  } else if ((rawMag.x < 0.0) && (fabs(rawMag.y) < 0.01)) {
     azimuth = 270.0;
   }
 
   return azimuth;
 }
 
-double NineAxis::getRawAccelerationX() { return rawAcceleration.x; }
-double NineAxis::getRawAccelerationY() { return rawAcceleration.y; }
-double NineAxis::getRawAccelerationZ() { return rawAcceleration.z; }
-double NineAxis::getRawAngularAccelerationX() {
-  return rawAngularAcceleration.x;
-}
-double NineAxis::getRawAngularAccelerationY() {
-  return rawAngularAcceleration.y;
-}
-double NineAxis::getRawAngularAccelerationZ() {
-  return rawAngularAcceleration.z;
-}
-double NineAxis::getRawMagneticFluxDensityX() {
-  return rawMagneticFluxDensity.x;
-}
-double NineAxis::getRawMagneticFluxDensityY() {
-  return rawMagneticFluxDensity.y;
-}
-double NineAxis::getRawMagneticFluxDensityZ() {
-  return rawMagneticFluxDensity.z;
-}
+double NineAxis::getRawAccelX() { return rawAccel.x; }
+double NineAxis::getRawAccelY() { return rawAccel.y; }
+double NineAxis::getRawAccelZ() { return rawAccel.z; }
+double NineAxis::getRawGyroX() { return rawGyro.x; }
+double NineAxis::getRawGyroY() { return rawGyro.y; }
+double NineAxis::getRawGyroZ() { return rawGyro.z; }
+double NineAxis::getRawMagX() { return rawMag.x; }
+double NineAxis::getRawMagY() { return rawMag.y; }
+double NineAxis::getRawMagZ() { return rawMag.z; }
